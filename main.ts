@@ -108,26 +108,18 @@ export default class TranslatorPlugin extends Plugin {
 					// Try to get selected text from editor first
 					const editor = this.app.workspace.activeEditor?.editor;
 					let selectedText = "";
-					
+
 					if (editor) {
 						selectedText = editor.getSelection();
-					} 
-					// If no selection in editor, try to get selection from reading view
-					else {
-						// Try multiple approaches to get selection in reading mode
-						const selection = window.getSelection();
-						if (selection && selection.toString().trim()) {
-							selectedText = selection.toString();
-						}
 					}
-					
+
 					const sel = cleanMarkup(selectedText)
 						.replace(/[^\w\s]/gi, " ")
 						.trim();
-						
+
 					new TranslatorModal(this.app, sel, settings).open();
 				}
-				
+
 				return true;
 			}
 		});
