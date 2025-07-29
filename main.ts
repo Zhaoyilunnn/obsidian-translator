@@ -86,25 +86,50 @@ export default class TranslatorPlugin extends Plugin {
 		this.addCommand({
 			id: "translate",
 			name: "translate",
-			editorCallback: (editor) => {
+			checkCallback: (checking) => {
 				const { settings } = this;
 				const enableKeys = Object.keys(settings).filter(
 					(key) =>
 						key.toLowerCase().includes("enable") &&
 						settings[key as keyof TranslatorSetting]
 				);
-				if (enableKeys.length) {
-					const messages = validator();
-					if (!messages.length) {
-						const sel = cleanMarkup(editor.getSelection())
-							.replace(/[^\w\s]/gi, " ")
-							.trim();
-						new TranslatorModal(this.app, sel, settings).open();
-					} else {
+				if (!enableKeys.length) return false;
+
+				const messages = validator();
+				if (messages.length) {
+					if (!checking) {
 						noticeHandler(`${messages.join(", ")} can not be empty!`);
 					}
+					return false;
 				}
-			},
+
+				// If we're not just checking, actually execute the command
+				if (!checking) {
+					// Try to get selected text from editor first
+					const editor = this.app.workspace.activeEditor?.editor;
+					let selectedText = "";
+					
+					if (editor) {
+						selectedText = editor.getSelection();
+					} 
+					// If no selection in editor, try to get selection from reading view
+					else {
+						// Try multiple approaches to get selection in reading mode
+						const selection = window.getSelection();
+						if (selection && selection.toString().trim()) {
+							selectedText = selection.toString();
+						}
+					}
+					
+					const sel = cleanMarkup(selectedText)
+						.replace(/[^\w\s]/gi, " ")
+						.trim();
+						
+					new TranslatorModal(this.app, sel, settings).open();
+				}
+				
+				return true;
+			}
 		});
 	}
 
